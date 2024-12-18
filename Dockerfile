@@ -14,7 +14,11 @@ COPY . /app
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --upgrade pip
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy project files
+COPY . .
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
@@ -22,8 +26,5 @@ EXPOSE 8000
 # Define environment variable
 ENV DJANGO_ENV=development
 
-# Run migrations and start the Django development server
-# CMD ["bash", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
-# CMD ["python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
-
-# ENV PATH="/py/bin:$PATH"
+# Start the application
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

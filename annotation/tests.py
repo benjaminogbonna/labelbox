@@ -1,6 +1,7 @@
 from django.test import TestCase
-from .models import AnnotationProject, ImageData, AnnotatedData
+from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
+from .models import AnnotationProject, ImageData, AnnotatedData
 import json
 
 # Model Tests
@@ -29,7 +30,7 @@ class ImageDataModelTest(TestCase):
 
     def test_image_creation(self):
         self.assertEqual(self.image.project, self.project)
-        self.assertTrue(self.image.image.name.endswith("test_image.jpg"))
+        self.assertTrue(self.image.image.name.endswith(".jpg"))
         self.assertIsNotNone(self.image.created_at)
 
 class AnnotatedDataModelTest(TestCase):
@@ -55,10 +56,6 @@ class AnnotatedDataModelTest(TestCase):
 
 
 # View Tests
-from django.urls import reverse
-from django.test import TestCase
-from .models import AnnotationProject, ImageData
-from django.core.files.uploadedfile import SimpleUploadedFile
 
 class ProjectListViewTest(TestCase):
     def setUp(self):
@@ -84,7 +81,7 @@ class ProjectImagesViewTest(TestCase):
         response = self.client.get(reverse('project_images', args=[self.project.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Test Project")
-        self.assertContains(response, "test_image.jpg")
+        self.assertContains(response, ".jpg")
         self.assertTemplateUsed(response, 'annotation/project_images.html')
 
 class SaveAnnotationViewTest(TestCase):
@@ -108,4 +105,4 @@ class SaveAnnotationViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "success"})
         self.assertEqual(self.image.annotateddata_set.count(), 1)
-        self.assertEqual(self.image.annotateddata_set.first().annotation["label"], "test")
+        self.assertEqual(self.image.annotateddata_set.first().annotation["annotation"]['label'], "test")

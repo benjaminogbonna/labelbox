@@ -20,3 +20,21 @@ def save_annotation(request, image_id):
         image = get_object_or_404(ImageData, id=image_id)
         AnnotatedData.objects.create(image=image, annotation=data)
         return JsonResponse({'status': 'success'})
+
+# @csrf_exempt
+# def save_annotation(request, image_id):
+#     if request.method == "POST":
+#         try:
+#             image = ImageData.objects.get(id=image_id)
+#             data = json.loads(request.body)
+#             annotation_text = data.get('annotation')
+
+#             # Ensure annotation_text is a dictionary
+#             if not isinstance(annotation_text, dict):
+#                 return JsonResponse({"status": "error", "message": "Invalid annotation format"}, status=400)
+
+#             AnnotatedData.objects.create(image=image, annotation=annotation_text)
+#             return JsonResponse({"status": "success"})
+#         except ImageData.DoesNotExist:
+#             return JsonResponse({"status": "error", "message": "Image not found"}, status=404)
+#     return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)

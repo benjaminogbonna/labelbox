@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ project.name }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">{{ project.name }}</h1>
+<p class="text-muted">{{ project.description }}</p>
+
+<div class="row">
+    {% for image in images %}
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <img src="{{ image.image.url }}" class="card-img-top" alt="Image">
+            <div class="card-body">
+                <form id="annotationForm{{ image.id }}">
+                    <div class="mb-3">
+                        <label for="annotation{{ image.id }}" class="form-label">Annotation</label>
+                        <input type="text" id="annotation{{ image.id }}" name="annotation" class="form-control" placeholder="Enter annotation">
+                    </div>
+                    <button type="button" class="btn btn-primary btn-save" data-image-id="{{ image.id }}">
+                        Save Annotation
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.querySelectorAll('.btn-save').forEach(button => {
+    button.addEventListener('click', function() {
+        const imageId = this.getAttribute('data-image-id');
+        const annotationInput = document.getElementById(`annotation${imageId}`);
+        fetch(`/save_annotation/${imageId}/`, {
+            method: 'POST',
+            body: JSON.stringify({ annotation: annotationInput.value }),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Annotation saved!');
+                annotationInput.value = '';
+            } else {
+                alert('Error saving annotation.');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
