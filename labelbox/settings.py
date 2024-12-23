@@ -88,7 +88,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'labelbox_db',
         'USER': 'postgres',
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD')
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '5433',
     }
