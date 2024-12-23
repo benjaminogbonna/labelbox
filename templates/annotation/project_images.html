@@ -7,24 +7,29 @@
 <p class="text-muted">{{ project.description }}</p>
 
 <div class="row">
-    {% for image in images %}
-    <div class="col-md-4 mb-3">
-        <div class="card">
-            <img src="{{ image.image.url }}" class="card-img-top" alt="Image">
-            <div class="card-body">
-                <form id="annotationForm{{ image.id }}">
-                    <div class="mb-3">
-                        <label for="annotation{{ image.id }}" class="form-label">Annotation</label>
-                        <input type="text" id="annotation{{ image.id }}" name="annotation" class="form-control" placeholder="Enter annotation">
-                    </div>
-                    <button type="button" class="btn btn-primary btn-save" data-image-id="{{ image.id }}">
-                        Save Annotation
-                    </button>
-                </form>
+    {% if images %}
+        {% for image in images %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <img src="{{ image.image.url }}" class="card-img-top" alt="Image">
+                <div class="card-body">
+                    <form id="annotationForm{{ image.id }}" method='post'>
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="annotation{{ image.id }}" class="form-label">Annotation</label>
+                            <input type="text" id="annotation{{ image.id }}" name="annotation" class="form-control" placeholder="Enter annotation">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-save" data-image-id="{{ image.id }}">
+                            Save Annotation
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-    {% endfor %}
+        {% endfor %}
+    {% else %}
+        <p>No Data for this project yet</p>
+    {% endif %}
 </div>
 
 <script>
@@ -32,24 +37,45 @@ document.querySelectorAll('.btn-save').forEach(button => {
     button.addEventListener('click', function() {
         const imageId = this.getAttribute('data-image-id');
         const annotationInput = document.getElementById(`annotation${imageId}`);
+        const annotationText = annotationInput.value.trim();
+
+        if (!annotationText) {
+            alert('Annotation cannot be empty.');
+            return;
+        }
+
+        // Create the required dictionary structure
+        const annotationData = {
+            annotation: {
+                annotation: annotationText // Modify the key if the backend expects something different
+            }
+        };
+
         fetch(`/save_annotation/${imageId}/`, {
             method: 'POST',
-            body: JSON.stringify({ annotation: annotationInput.value }),
+            body: JSON.stringify(annotationData), // Send the annotation as a JSON dictionary
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
+                'X-CSRFToken': '{{ csrf_token }}' // Ensure the CSRF token is included
             }
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
                 alert('Annotation saved!');
-                annotationInput.value = '';
+                annotationInput.value = ''; // Clear the input after successful save
+                // Optionally remove the image from the UI after annotation
+                document.querySelector(`#image-row-${imageId}`).remove();
             } else {
-                alert('Error saving annotation.');
+                alert(`Error saving annotation: ${data.message || 'Unknown error'}`);
             }
-        });
+        })
+        // .catch(error => {
+        //     console.error('Error:', error);
+        //     alert('An unexpected error occurred.');
+        // });
     });
 });
 </script>
+
 {% endblock %}

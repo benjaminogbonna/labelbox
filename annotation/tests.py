@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from .models import AnnotationProject, ImageData, AnnotatedData
+from main.models import CustomUser
 import json
 
 # Model Tests
@@ -39,11 +40,13 @@ class AnnotatedDataModelTest(TestCase):
             name="Test Project",
             description="This is a test project"
         )
+        self.user = CustomUser.objects.create_user(username="testuser", email='test@test.com', password="password123")
         self.image = ImageData.objects.create(
             project=self.project,
             image=SimpleUploadedFile("test_image.jpg", b"file_content", content_type="image/jpeg")
         )
         self.annotation = AnnotatedData.objects.create(
+            user=self.user,
             image=self.image,
             annotation={"label": "test", "coordinates": [100, 200]}
         )
@@ -56,7 +59,6 @@ class AnnotatedDataModelTest(TestCase):
 
 
 # View Tests
-
 class ProjectListViewTest(TestCase):
     def setUp(self):
         AnnotationProject.objects.create(name="Project 1", description="Description 1")
@@ -76,16 +78,20 @@ class ProjectImagesViewTest(TestCase):
             project=self.project,
             image=SimpleUploadedFile("test_image.jpg", b"file_content", content_type="image/jpeg")
         )
+        self.user = CustomUser.objects.create_user(username="testuser", email='test@test.com', password="password")
 
     def test_project_images_view(self):
+        self.client.login(username="testuser", password="password")
         response = self.client.get(reverse('project_images', args=[self.project.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Test Project")
         self.assertContains(response, ".jpg")
         self.assertTemplateUsed(response, 'annotation/project_images.html')
 
+
 class SaveAnnotationViewTest(TestCase):
     def setUp(self):
+        self.user = CustomUser.objects.create_user(username="testuser", email='test@test.com', password="password")
         self.project = AnnotationProject.objects.create(name="Test Project", description="This is a test project")
         self.image = ImageData.objects.create(
             project=self.project,
@@ -94,6 +100,7 @@ class SaveAnnotationViewTest(TestCase):
         self.annotation_url = reverse('save_annotation', args=[self.image.id])
 
     def test_save_annotation_post(self):
+        self.client.login(username="testuser", password="password")  # Log in user
         data = {
             "annotation": {"label": "test", "coordinates": [100, 200]}
         }
@@ -104,5 +111,8 @@ class SaveAnnotationViewTest(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "success"})
-        self.assertEqual(self.image.annotateddata_set.count(), 1)
-        self.assertEqual(self.image.annotateddata_set.first().annotation["annotation"]['label'], "test")
+
+        annotation_instance = self.image.annotateddata_set.first()
+        self.assertIsNotNone(annotation_instance)
+        self.assertEqual(annotation_instance.user, self.user)  # Check user
+        self.assertEqual(annotation_instance.annotation["label"], "test")
