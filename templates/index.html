@@ -3,8 +3,11 @@
 {% block title %}Labelbox{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Welcome to Labelbox</h1>
-    <a class="btn btn-primary" href="{% url 'annotation:project_list' %}">
-        Click to see available Projects
-    </a>
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="display-4">Welcome to Labelbox</h1>
+        <p class="lead">Label images, and manage projects.</p>
+            <a href="{% url 'annotation:project_list' %}" class="btn btn-primary btn-lg">See Projects</a>
+    </div>
+</div>
 {% endblock %}
